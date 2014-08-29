@@ -49,7 +49,7 @@ CREATE FUNCTION email_out(email)
 -- now, we can create the type. The internallength specifies the size of the
 -- memory block required to hold the type (we need two 8-byte doubles).
 CREATE TYPE email (
-   internallength = 16,
+   internallength = 256,
    input = email_in,
    output = email_out,
    alignment = double
@@ -58,5 +58,7 @@ CREATE TABLE test_email (
 	a	email,
 	b	email
 );
+INSERT INTO test_email values('aiiii@abc.com','wxyzbcd.com');
+SELECT * from test_email;
 DROP TYPE email CASCADE;
 DROP TABLE test_email;

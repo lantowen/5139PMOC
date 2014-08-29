@@ -10,15 +10,17 @@
 #include "postgres.h"
 
 #include "fmgr.h"
+#include <string.h>
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
 
-
+#define DOMAIN_LENGTH 128
+#define LOCAL_LENGTH 128
 PG_MODULE_MAGIC;
 
 typedef struct Email
 {
-	double x;
-	double y;
+	char x[DOMAIN_LENGTH];
+	char y[LOCAL_LENGTH];
 }	Email;
 
 /*
@@ -41,19 +43,56 @@ Datum
 email_in(PG_FUNCTION_ARGS)
 {
 	char	   *str = PG_GETARG_CSTRING(0);
-	double		x,
-				y;
+	char*       x, 
+			*y;
+	char*       pch;
+	x = (char *)palloc(sizeof(char)*128);
+	y = (char *)palloc(sizeof(char)*128);
+	pch = strchr(str,'@');
+	if(pch == NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("not valid email address(no @)\"%s\"",
+						str)));
+	pch = strchr(pch+1,'@');
+	if(pch != NULL)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("not valid email address(more @s)\"%s\"",
+						str)));
 	Email    *result;
-
-	if (sscanf(str, " ( %lf , %lf )", &x, &y) != 2)
+	result = (Email *) palloc(sizeof(Email));
+	pch = strtok(str,"@");
+	if(strlen(pch) > 127)
+	ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("Local too long: \"%s\"",
+						pch)));
+	strncpy(x ,pch, 127);
+	pch = strtok(NULL,"@");
+	if(strlen(pch) > 127)
+	ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("Domain too long: \"%s\"",
+						pch)));
+	strncpy(y ,pch, 127);
+	/*
+	if (sscanf(str, "%s", x) != 1)
 		ereport(ERROR,
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 				 errmsg("invalid input syntax for Email: \"%s\"",
 						str)));
 
-	result = (Email *) palloc(sizeof(Email));
-	result->x = x;
-	result->y = y;
+	
+	strncpy(result->x ,x, 127);
+	result->x[127] = '\0';
+	//result->x[1] = '\0';
+	result->y = 100;
+	*/
+	strncpy(result->x ,x, 127);
+	strncpy(result->y ,y, 127);
+	pfree(x);
+	pfree(y);
 	PG_RETURN_POINTER(result);
 }
 
@@ -65,8 +104,8 @@ email_out(PG_FUNCTION_ARGS)
 	Email    *email = (Email *) PG_GETARG_POINTER(0);
 	char	   *result;
 
-	result = (char *) palloc(100);
-	snprintf(result, 100, "(%g,%g)", email->x, email->y);
+	result = (char *) palloc(300);
+	snprintf(result, 300, "(%s,%s)", email->x, email->y);
 	PG_RETURN_CSTRING(result);
 }
 
