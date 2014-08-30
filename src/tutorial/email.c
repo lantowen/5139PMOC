@@ -15,6 +15,8 @@
 
 #define DOMAIN_LENGTH 128
 #define LOCAL_LENGTH 128
+#define DOMAIN 1
+#define LOCAL 0
 PG_MODULE_MAGIC;
 
 typedef struct Email
@@ -32,7 +34,59 @@ Datum		email_in(PG_FUNCTION_ARGS);
 Datum		email_out(PG_FUNCTION_ARGS);
 //Datum		email_recv(PG_FUNCTION_ARGS);
 //Datum		email_send(PG_FUNCTION_ARGS);
-
+static int Word_Validate(char* word) {
+	int i;
+	i = strlen(word);
+	if((word[0] >= 65 &&  word[0] <= 90)||(word[0] >= 97 &&  word[0] <= 122))
+			if((word[i-1] >= 48 &&  word[i-1] <= 57)||(word[i-1] >= 65 &&  word[i-1] <= 90)
+				||(word[i-1] >= 97 &&  word[i-1] <= 122))
+				for(int a = 1; a < i-1; a++) {
+				if((word[a] >= 48 &&  word[a] <= 57)||(word[a] >= 65 &&  word[a] <= 90)
+				||(word[a] >= 97 &&  word[a] <= 122)||word[a] == 45)
+					;
+				else
+					return 0;
+				}
+			else return 0;
+	else return 0;
+	return 1;
+}
+static int Email_Validate(char* part, int mode) {
+	char str[128];
+	int counter = 0;
+	int flag = 0;
+	strncpy(str , part, 127);
+	int a = strlen(str);
+	if(str[0] == 46 || str[a-1] == 46)
+		return 0;
+	for(int i = 0; i < a; i++) {
+		if(str[i] == 46)
+			if(flag == 1)
+				return 0;
+			else
+				flag = 1;
+		else 
+			flag = 0;		
+	}
+	char* pch;
+	pch = strtok (str,".");
+	if(Word_Validate(pch) == 0)
+		return 0;
+  	while (true)
+  	{
+    	pch = strtok (NULL, ".");
+    	if(pch == NULL)
+    		break;
+    	if(Word_Validate(pch) == 0)
+			return 0;
+    	counter++;
+  	}
+  	if(counter == 0 && mode == DOMAIN)
+  		return 0;
+  	
+  	return 1;
+	
+}
 /*****************************************************************************
  * Input/Output functions
  *****************************************************************************/
@@ -76,6 +130,20 @@ email_in(PG_FUNCTION_ARGS)
 				 errmsg("Domain too long: \"%s\"",
 						pch)));
 	strncpy(y ,pch, 127);
+	int test;
+	test = Email_Validate(x, LOCAL);
+	if( test == 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("Invalid Local: \"%s\"",
+						x)));
+	test = Email_Validate(y, DOMAIN);
+	if(test == 0)
+		ereport(ERROR,
+				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
+				 errmsg("Invalid DOMAIN: \"%s\"",
+						y)));
+	
 	/*
 	if (sscanf(str, "%s", x) != 1)
 		ereport(ERROR,
