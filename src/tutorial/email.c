@@ -25,11 +25,11 @@
 #define LOCAL 0
 PG_MODULE_MAGIC;
 
-typedef struct Email
+typedef struct EmailAddress
 {
 	char x[DOMAIN_LENGTH];
 	char y[LOCAL_LENGTH];
-}	Email;
+}	EmailAddress;
 
 /*
  * Since we use V1 function calling convention, all these functions have
@@ -104,7 +104,7 @@ static int Email_Validate(char* part, int mode) {
 	
 }
 static int
-email_cmp_internal(Email * a, Email * b)
+email_cmp_internal(EmailAddress * a, EmailAddress * b)
 {
 	int i = 0;
 	//ereport(NOTICE, (errmsg("called 1: a=%s", a->x)));
@@ -152,8 +152,8 @@ email_in(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
 				 errmsg("not valid email address(more @s)\"%s\"",
 						str)));
-	Email    *result;
-	result = (Email *) palloc(sizeof(Email));
+	EmailAddress    *result;
+	result = (EmailAddress *) palloc(sizeof(EmailAddress));
 	pch = strtok(str,"@");
 	if(strlen(pch) > 127)
 	ereport(ERROR,
@@ -220,7 +220,7 @@ PG_FUNCTION_INFO_V1(email_out);
 Datum
 email_out(PG_FUNCTION_ARGS)
 {
-	Email    *email = (Email *) PG_GETARG_POINTER(0);
+	EmailAddress    *email = (EmailAddress *) PG_GETARG_POINTER(0);
 	char	   *result;
 
 	result = (char *) palloc(300);
@@ -233,11 +233,11 @@ Datum
 email_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
-	Email    *result;
+	EmailAddress    *result;
 	char* temp_str1 =  NULL,
 		*temp_str2 = NULL;
 	//ereport(NOTICE, (errmsg("email recv called")));
-	result = (Email *) palloc(sizeof(Email));
+	result = (EmailAddress *) palloc(sizeof(EmailAddress));
 	temp_str1 = (char *)pq_getmsgstring(buf);
 
 	temp_str2 = (char *)pq_getmsgstring(buf);
@@ -256,7 +256,7 @@ PG_FUNCTION_INFO_V1(email_send);
 Datum
 email_send(PG_FUNCTION_ARGS)
 {
-	Email    *email = (Email *) PG_GETARG_POINTER(0);
+	EmailAddress    *email = (EmailAddress *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
 	//ereport(NOTICE, (errmsg("email send called")));
 
@@ -272,8 +272,8 @@ PG_FUNCTION_INFO_V1(email_eq);
 Datum
 email_eq(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) == 0);
 }
@@ -282,8 +282,8 @@ PG_FUNCTION_INFO_V1(email_lt);
 Datum
 email_lt(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) < 0);
 }
@@ -293,8 +293,8 @@ PG_FUNCTION_INFO_V1(email_le);
 Datum
 email_le(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) <= 0);
 }
@@ -304,8 +304,8 @@ PG_FUNCTION_INFO_V1(email_neq);
 Datum
 email_neq(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) != 0);
 }
@@ -315,8 +315,8 @@ PG_FUNCTION_INFO_V1(email_ge);
 Datum
 email_ge(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) >= 0);
 }
@@ -326,8 +326,8 @@ PG_FUNCTION_INFO_V1(email_gt);
 Datum
 email_gt(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_BOOL(email_cmp_internal(a, b) > 0);
 }
@@ -337,8 +337,8 @@ PG_FUNCTION_INFO_V1(email_cmp);
 Datum
 email_cmp(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_INT32(email_cmp_internal(a, b));
 }
@@ -349,8 +349,8 @@ PG_FUNCTION_INFO_V1(email_domain_eq);
 Datum
 email_domain_eq(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_INT32(strncmp(a->y, b->y, DOMAIN_LENGTH) == 0);
 }
@@ -360,8 +360,8 @@ PG_FUNCTION_INFO_V1(email_domain_neq);
 Datum
 email_domain_neq(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
-	Email    *b = (Email *) PG_GETARG_POINTER(1);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
+	EmailAddress    *b = (EmailAddress *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_INT32(strncmp(a->y, b->y, DOMAIN_LENGTH) != 0);
 }
@@ -371,7 +371,7 @@ PG_FUNCTION_INFO_V1(email_hash);
 Datum
 email_hash(PG_FUNCTION_ARGS)
 {
-	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	EmailAddress    *a = (EmailAddress *) PG_GETARG_POINTER(0);
 	Datum		result_1, result_2;
 	result_1 = hash_any((unsigned char *) a->x, strlen(a->x));
 	result_2 = hash_any((unsigned char *) a->y, strlen(a->y));

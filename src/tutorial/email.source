@@ -1,69 +1,24 @@
----------------------------------------------------------------------------
---
--- complex.sql-
---    This file shows how to create a new user-defined type and how to
---    use this new type.
---
---
--- Portions Copyright (c) 1996-2013, PostgreSQL Global Development Group
--- Portions Copyright (c) 1994, Regents of the University of California
---
--- src/tutorial/complex.source
---
----------------------------------------------------------------------------
-
------------------------------
--- Creating a new type:
---	We are going to create a new type called 'complex' which represents
---	complex numbers.
---	A user-defined type must have an input and an output function, and
---	optionally can have binary input and output functions.  All of these
---	are usually user-defined C functions.
------------------------------
-
--- Assume the user defined functions are in _OBJWD_/complex$DLSUFFIX
--- (we do not want to assume this is in the dynamic loader search path).
--- Look at $PWD/complex.c for the source.  Note that we declare all of
--- them as STRICT, so we do not need to cope with NULL inputs in the
--- C code.  We also mark them IMMUTABLE, since they always return the
--- same outputs given the same inputs.
-
--- the input function 'complex_in' takes a null-terminated string (the
--- textual representation of the type) and turns it into the internal
--- (in memory) representation. You will get a message telling you 'complex'
--- does not exist yet but that's okay.
-
 CREATE FUNCTION email_in(cstring)
-   RETURNS email
+   RETURNS EmailAddress
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
--- the output function 'complex_out' takes the internal representation and
--- converts it into the textual representation.
-
-CREATE FUNCTION email_out(email)
+CREATE FUNCTION email_out(EmailAddress)
    RETURNS cstring
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
--- the binary input function 'complex_recv' takes a StringInfo buffer
--- and turns its contents into the internal representation.
-
 CREATE FUNCTION email_recv(internal)
-   RETURNS email
+   RETURNS EmailAddress
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
--- the binary output function 'complex_send' takes the internal representation
--- and converts it into a (hopefully) platform-independent bytea string.
-
-CREATE FUNCTION email_send(email)
+CREATE FUNCTION email_send(EmailAddress)
    RETURNS bytea
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
--- now, we can create the type. The internallength specifies the size of the
--- memory block required to hold the type (we need two 8-byte doubles).
-CREATE TYPE email (
+
+CREATE TYPE EmailAddress (
    internallength = 256,
    input = email_in,
    output = email_out,
@@ -71,26 +26,27 @@ CREATE TYPE email (
    receive = email_recv,
    alignment = double
 );
-CREATE FUNCTION email_lt(email, email) RETURNS bool
+
+CREATE FUNCTION email_lt(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_le(email, email) RETURNS bool
+CREATE FUNCTION email_le(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_eq(email, email) RETURNS bool
+CREATE FUNCTION email_eq(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_neq(email, email) RETURNS bool
+CREATE FUNCTION email_neq(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_ge(email, email) RETURNS bool
+CREATE FUNCTION email_ge(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_gt(email, email) RETURNS bool
+CREATE FUNCTION email_gt(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_domain_eq(email, email) RETURNS bool
+CREATE FUNCTION email_domain_eq(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
-CREATE FUNCTION email_domain_neq(email, email) RETURNS bool
+CREATE FUNCTION email_domain_neq(EmailAddress, EmailAddress) RETURNS bool
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
    
 CREATE OPERATOR = (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     COMMUTATOR = =,
     NEGATOR    = <>,
     PROCEDURE  = email_eq,
@@ -101,8 +57,8 @@ CREATE OPERATOR = (
 );
 
 CREATE OPERATOR <> (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     NEGATOR    = =,
     COMMUTATOR = <>,
     PROCEDURE  = email_neq,
@@ -111,8 +67,8 @@ CREATE OPERATOR <> (
 );
 
 CREATE OPERATOR < (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     NEGATOR    = >=,
     COMMUTATOR = >,
     PROCEDURE  = email_lt,
@@ -121,8 +77,8 @@ CREATE OPERATOR < (
 );
 
 CREATE OPERATOR <= (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     NEGATOR    = >,
     COMMUTATOR = >=,
     PROCEDURE  = email_le,
@@ -131,8 +87,8 @@ CREATE OPERATOR <= (
 );
 
 CREATE OPERATOR >= (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     NEGATOR    = <,
     COMMUTATOR = <=,
     PROCEDURE  = email_ge,
@@ -141,8 +97,8 @@ CREATE OPERATOR >= (
 );
 
 CREATE OPERATOR > (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     NEGATOR    = <=,
     COMMUTATOR = <,
     PROCEDURE  = email_gt,
@@ -150,8 +106,8 @@ CREATE OPERATOR > (
     JOIN       = scalargtjoinsel
 );
 CREATE OPERATOR ~ (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     COMMUTATOR = ~,
     NEGATOR    = !~,
     PROCEDURE  = email_domain_eq,
@@ -160,8 +116,8 @@ CREATE OPERATOR ~ (
 );
 
 CREATE OPERATOR !~ (
-    LEFTARG    = email,
-    RIGHTARG   = email,
+    LEFTARG    = EmailAddress,
+    RIGHTARG   = EmailAddress,
     COMMUTATOR = !~,
     NEGATOR    = ~,
     PROCEDURE  = email_domain_neq,
@@ -169,38 +125,38 @@ CREATE OPERATOR !~ (
     JOIN       = neqjoinsel
 );
 
-CREATE FUNCTION email_cmp(email) RETURNS int4
+CREATE FUNCTION email_cmp(EmailAddress) RETURNS int4
    AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION email_hash(email) RETURNS int4
+CREATE FUNCTION email_hash(EmailAddress) RETURNS int4
    AS '_OBJWD_/email' LANGUAGE C STRICT IMMUTABLE;
 
 CREATE OPERATOR CLASS email_ops
-DEFAULT FOR TYPE email USING btree AS
-    OPERATOR    1   <  (email, email),
-    OPERATOR    2   <= (email, email),
-    OPERATOR    3   =  (email, email),
-    OPERATOR    4   >= (email, email),
-    OPERATOR    5   >  (email, email),
-    FUNCTION    1   email_cmp(email, email);
+DEFAULT FOR TYPE EmailAddress USING btree AS
+    OPERATOR    1   <  (EmailAddress, EmailAddress),
+    OPERATOR    2   <= (EmailAddress, EmailAddress),
+    OPERATOR    3   =  (EmailAddress, EmailAddress),
+    OPERATOR    4   >= (EmailAddress, EmailAddress),
+    OPERATOR    5   >  (EmailAddress, EmailAddress),
+    FUNCTION    1   email_cmp(EmailAddress, EmailAddress);
 
 CREATE OPERATOR CLASS email_ops
-DEFAULT FOR TYPE email USING hash AS
-    OPERATOR    1   =  (email, email),
-    FUNCTION    1   email_hash(email);
+DEFAULT FOR TYPE EmailAddress USING hash AS
+    OPERATOR    1   =  (EmailAddress, EmailAddress),
+    FUNCTION    1   email_hash(EmailAddress);
 
 
 CREATE TABLE test_email (
-	a	email,
-	b	email,
-	c	email,
-	d	email,
-	e	email,
-	f	email,
-	g	email,
-	h	email,
-	i	email,
-	j	email
+	a	EmailAddress,
+	b	EmailAddress,
+	c	EmailAddress,
+	d	EmailAddress,
+	e	EmailAddress,
+	f	EmailAddress,
+	g	EmailAddress,
+	h	EmailAddress,
+	i	EmailAddress,
+	j	EmailAddress
 );
 INSERT INTO test_email values('jas@cse.unsw.edu.au','john-shepherd@hotmail.com',
 'john.a.shepherd@gmail.com',
@@ -226,16 +182,16 @@ DELETE FROM test_email;
 SELECT * from test_email;
 COPY BINARY test_email FROM '/tmp/testfile';
 SELECT * from test_email;
-SELECT CAST('ABC@abc.com' AS email);
+SELECT CAST('ABC@abc.com' AS EmailAddress);
 
-SELECT (CAST('a@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
-SELECT (CAST('abcd@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
-SELECT (CAST('abc@abc.com' AS email) = CAST('abcd@abc.com' AS email)), false AS expected;
-SELECT (CAST('abc@abc.com' AS email) = CAST('abc@cba.com' AS email)), false AS expected;
-SELECT (CAST('acb@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
-SELECT (CAST('abc@abc.com' AS email) = CAST('abc@abc.com' AS email)), true AS expected;
+SELECT (CAST('a@abc.com' AS EmailAddress) = CAST('abc@abc.com' AS EmailAddress)), false AS expected;
+SELECT (CAST('abcd@abc.com' AS EmailAddress) = CAST('abc@abc.com' AS EmailAddress)), false AS expected;
+SELECT (CAST('abc@abc.com' AS EmailAddress) = CAST('abcd@abc.com' AS EmailAddress)), false AS expected;
+SELECT (CAST('abc@abc.com' AS EmailAddress) = CAST('abc@cba.com' AS EmailAddress)), false AS expected;
+SELECT (CAST('acb@abc.com' AS EmailAddress) = CAST('abc@abc.com' AS EmailAddress)), false AS expected;
+SELECT (CAST('abc@abc.com' AS EmailAddress) = CAST('abc@abc.com' AS EmailAddress)), true AS expected;
 DROP TABLE test_email;
-CREATE TABLE test_email ( a email);
+CREATE TABLE test_email ( a EmailAddress);
 INSERT INTO test_email values('aaa@aaa.aaa');
 INSERT INTO test_email values('aaa@aab.aaa');
 INSERT INTO test_email values('aab@aaa.aaa');
@@ -1267,7 +1223,7 @@ DROP TABLE test_email;
 
 
 create table UserSessions (
-   username  email,
+   username  EmailAddress,
    loggedIn  timestamp,
    loggedOut timestamp
    -- etc. etc.
@@ -1296,4 +1252,4 @@ DROP TABLE usersessions;
 
 
 
-DROP TYPE email CASCADE;
+DROP TYPE EmailAddress CASCADE;
