@@ -36,6 +36,15 @@ Datum		email_in(PG_FUNCTION_ARGS);
 Datum		email_out(PG_FUNCTION_ARGS);
 Datum		email_recv(PG_FUNCTION_ARGS);
 Datum		email_send(PG_FUNCTION_ARGS);
+Datum		email_eq(PG_FUNCTION_ARGS);
+Datum		email_lt(PG_FUNCTION_ARGS);
+Datum		email_le(PG_FUNCTION_ARGS);
+Datum		email_neq(PG_FUNCTION_ARGS);
+Datum		email_ge(PG_FUNCTION_ARGS);
+Datum		email_gt(PG_FUNCTION_ARGS);
+Datum		email_cmp(PG_FUNCTION_ARGS);
+Datum		email_domain_eq(PG_FUNCTION_ARGS);
+Datum		email_domain_neq(PG_FUNCTION_ARGS);
 static int Word_Validate(char* word) {
 	int i;
 	i = strlen(word);
@@ -89,6 +98,28 @@ static int Email_Validate(char* part, int mode) {
   	return 1;
 	
 }
+static int
+email_cmp_internal(Email * a, Email * b)
+{
+	int i = 0;
+	//ereport(NOTICE, (errmsg("called 1: a=%s", a->x)));
+	while(a->x[i] != '\0' && b->x[i] != '\0') {
+		//ereport(NOTICE, (errmsg("called ")));
+		if(a->x[i] > b->x[i])
+			return 1;
+		else if(a->x[i] < b->x[i])
+			return -1;
+		i++;
+	}
+	//ereport(NOTICE, (errmsg("called 1")));
+	if(a->x[i] == '\0' && b->x[i] == '\0') 
+		return strncmp(a->y, b->y, DOMAIN_LENGTH);
+	else if(a->x[i] == '\0') 
+		return '@' - b->x[i];
+	else
+		return a->x[i] - '@';
+}
+
 /*****************************************************************************
  * Input/Output functions
  *****************************************************************************/
@@ -229,5 +260,104 @@ email_send(PG_FUNCTION_ARGS)
 	//pq_sendtext(&buf, "@",1);
 	pq_sendstring(&buf, email->y);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
+}
+
+PG_FUNCTION_INFO_V1(email_eq);
+
+Datum
+email_eq(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) == 0);
+}
+PG_FUNCTION_INFO_V1(email_lt);
+
+Datum
+email_lt(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) < 0);
+}
+
+PG_FUNCTION_INFO_V1(email_le);
+
+Datum
+email_le(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) <= 0);
+}
+
+PG_FUNCTION_INFO_V1(email_neq);
+
+Datum
+email_neq(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) != 0);
+}
+
+PG_FUNCTION_INFO_V1(email_ge);
+
+Datum
+email_ge(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) >= 0);
+}
+
+PG_FUNCTION_INFO_V1(email_gt);
+
+Datum
+email_gt(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_BOOL(email_cmp_internal(a, b) > 0);
+}
+
+PG_FUNCTION_INFO_V1(email_cmp);
+
+Datum
+email_cmp(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_INT32(email_cmp_internal(a, b));
+}
+
+
+PG_FUNCTION_INFO_V1(email_domain_eq);
+
+Datum
+email_domain_eq(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_INT32(strncmp(a->y, b->y, DOMAIN_LENGTH) == 0);
+}
+
+PG_FUNCTION_INFO_V1(email_domain_neq);
+
+Datum
+email_domain_neq(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Email    *b = (Email *) PG_GETARG_POINTER(1);
+
+	PG_RETURN_INT32(strncmp(a->y, b->y, DOMAIN_LENGTH) != 0);
 }
 

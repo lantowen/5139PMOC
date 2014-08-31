@@ -71,6 +71,108 @@ CREATE TYPE email (
    receive = email_recv,
    alignment = double
 );
+CREATE FUNCTION email_lt(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_le(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_eq(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_neq(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_ge(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_gt(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_domain_eq(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+CREATE FUNCTION email_domain_neq(email, email) RETURNS bool
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
+   
+CREATE OPERATOR = (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    COMMUTATOR = =,
+    NEGATOR    = <>,
+    PROCEDURE  = email_eq,
+    RESTRICT   = eqsel,
+    JOIN       = eqjoinsel,
+    HASHES,
+    MERGES
+);
+
+CREATE OPERATOR <> (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    NEGATOR    = =,
+    COMMUTATOR = <>,
+    PROCEDURE  = email_neq,
+    RESTRICT   = neqsel,
+    JOIN       = neqjoinsel
+);
+
+CREATE OPERATOR < (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    NEGATOR    = >=,
+    COMMUTATOR = >,
+    PROCEDURE  = email_lt,
+    RESTRICT   = scalarltsel,
+    JOIN       = scalarltjoinsel
+);
+
+CREATE OPERATOR <= (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    NEGATOR    = >,
+    COMMUTATOR = >=,
+    PROCEDURE  = email_le,
+    RESTRICT   = scalarltsel,
+    JOIN       = scalarltjoinsel
+);
+
+CREATE OPERATOR >= (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    NEGATOR    = <,
+    COMMUTATOR = <=,
+    PROCEDURE  = email_ge,
+    RESTRICT   = scalargtsel,
+    JOIN       = scalargtjoinsel
+);
+
+CREATE OPERATOR > (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    NEGATOR    = <=,
+    COMMUTATOR = <,
+    PROCEDURE  = email_gt,
+    RESTRICT   = scalargtsel,
+    JOIN       = scalargtjoinsel
+);
+CREATE OPERATOR ~ (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    COMMUTATOR = ~,
+    NEGATOR    = !~,
+    PROCEDURE  = email_domain_eq,
+    RESTRICT   = eqsel,
+    JOIN       = eqjoinsel,
+    HASHES,
+    MERGES
+);
+
+CREATE OPERATOR !~ (
+    LEFTARG    = email,
+    RIGHTARG   = email,
+    COMMUTATOR = !~,
+    NEGATOR    = ~,
+    PROCEDURE  = email_domain_neq,
+    RESTRICT   = neqsel,
+    JOIN       = neqjoinsel
+);
+
+CREATE FUNCTION email_cmp(email, email) RETURNS int4
+   AS '_OBJWD_/email' LANGUAGE C IMMUTABLE STRICT;
 CREATE TABLE test_email (
 	a	email,
 	b	email,
@@ -107,5 +209,47 @@ DELETE FROM test_email;
 SELECT * from test_email;
 COPY BINARY test_email FROM '/tmp/testfile';
 SELECT * from test_email;
-DROP TYPE email CASCADE;
+SELECT CAST('ABC@abc.com' AS email);
+
+SELECT (CAST('a@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
+SELECT (CAST('abcd@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
+SELECT (CAST('abc@abc.com' AS email) = CAST('abcd@abc.com' AS email)), false AS expected;
+SELECT (CAST('abc@abc.com' AS email) = CAST('abc@cba.com' AS email)), false AS expected;
+SELECT (CAST('acb@abc.com' AS email) = CAST('abc@abc.com' AS email)), false AS expected;
+SELECT (CAST('abc@abc.com' AS email) = CAST('abc@abc.com' AS email)), true AS expected;
 DROP TABLE test_email;
+CREATE TABLE test_email ( a email);
+INSERT INTO test_email values('aaa@aaa.aaa');
+INSERT INTO test_email values('aaa@aab.aaa');
+INSERT INTO test_email values('aab@aaa.aaa');
+INSERT INTO test_email values('bbb@bbb.bbb');
+INSERT INTO test_email values('aa@aaa.aaa');
+INSERT INTO test_email values('aaa@aa.aaa');
+INSERT INTO test_email values('bb@bbb.bbb');
+INSERT INTO test_email values('bbb@bb.bbb');
+
+--SELECT t1.a, t2.a FROM test_email t1, test_email t2 where t1.a > t2.a;
+SELECT * FROM test_email where a > 'aaa@aa.aaa';
+SELECT * FROM test_email where a <= 'aaa@aa.aaa';
+
+SELECT * FROM test_email where a < 'aaa@aa.aaa';
+SELECT * FROM test_email where a >= 'aaa@aa.aaa';
+
+SELECT * FROM test_email where a = 'aaa@aa.aaa';
+SELECT * FROM test_email where a <> 'aaa@aa.aaa';
+
+SELECT * FROM test_email where a ~ 'aaadadasdada@aa.aaa';
+SELECT * FROM test_email where a !~ 'aaadadasdada@aa.aaa';
+
+DROP TABLE test_email;
+
+
+
+
+
+
+
+
+
+
+DROP TYPE email CASCADE;
