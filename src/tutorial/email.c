@@ -10,6 +10,10 @@
 #include "postgres.h"
 
 #include "fmgr.h"
+#include "access/hash.h"
+#include "catalog/pg_collation.h"
+#include "utils/builtins.h"
+#include "utils/formatting.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -45,6 +49,7 @@ Datum		email_gt(PG_FUNCTION_ARGS);
 Datum		email_cmp(PG_FUNCTION_ARGS);
 Datum		email_domain_eq(PG_FUNCTION_ARGS);
 Datum		email_domain_neq(PG_FUNCTION_ARGS);
+Datum		email_hash(PG_FUNCTION_ARGS);
 static int Word_Validate(char* word) {
 	int i;
 	i = strlen(word);
@@ -359,5 +364,18 @@ email_domain_neq(PG_FUNCTION_ARGS)
 	Email    *b = (Email *) PG_GETARG_POINTER(1);
 
 	PG_RETURN_INT32(strncmp(a->y, b->y, DOMAIN_LENGTH) != 0);
+}
+
+PG_FUNCTION_INFO_V1(email_hash);
+
+Datum
+email_hash(PG_FUNCTION_ARGS)
+{
+	Email    *a = (Email *) PG_GETARG_POINTER(0);
+	Datum		result_1, result_2;
+	result_1 = hash_any((unsigned char *) a->x, strlen(a->x));
+	result_2 = hash_any((unsigned char *) a->y, strlen(a->y));
+	
+	PG_RETURN_DATUM(result_1 ^ result_2);
 }
 
