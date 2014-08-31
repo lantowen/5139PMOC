@@ -106,23 +106,26 @@ static int Email_Validate(char* part, int mode) {
 static int
 email_cmp_internal(EmailAddress * a, EmailAddress * b)
 {
-	int i = 0;
-	//ereport(NOTICE, (errmsg("called 1: a=%s", a->x)));
-	while(a->x[i] != '\0' && b->x[i] != '\0') {
-		//ereport(NOTICE, (errmsg("called ")));
-		if(a->x[i] > b->x[i])
-			return 1;
-		else if(a->x[i] < b->x[i])
-			return -1;
-		i++;
+	int result = strncmp(a->y, b->y, DOMAIN_LENGTH);
+	if(result == 0) {
+		int i = 0;
+		while(a->x[i] != '\0' && b->x[i] != '\0') {
+			//ereport(NOTICE, (errmsg("called ")));
+			if(a->x[i] > b->x[i])
+				return 1;
+			else if(a->x[i] < b->x[i])
+				return -1;
+			i++;
+		}
+		if(a->x[i] == '\0' && b->x[i] == '\0')
+			return 0;
+		else if(a->x[i] == '\0') 
+			return '@' - b->x[i];
+		else
+			return a->x[i] - '@';
 	}
-	//ereport(NOTICE, (errmsg("called 1")));
-	if(a->x[i] == '\0' && b->x[i] == '\0') 
-		return strncmp(a->y, b->y, DOMAIN_LENGTH);
-	else if(a->x[i] == '\0') 
-		return '@' - b->x[i];
 	else
-		return a->x[i] - '@';
+		return result;
 }
 
 /*****************************************************************************
