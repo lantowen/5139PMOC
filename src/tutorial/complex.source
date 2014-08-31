@@ -222,6 +222,12 @@ SELECT * from test_complex where a = '(56.0,-22.5)';
 SELECT * from test_complex where a < '(56.0,-22.5)';
 SELECT * from test_complex where a > '(56.0,-22.5)';
 
+SELECT * from test_complex;
+COPY BINARY test_complex to '/tmp/testfile';
+DELETE FROM test_complex;
+SELECT * from test_complex;
+COPY BINARY test_complex FROM '/tmp/testfile';
+SELECT * from test_complex;
 
 -- clean up the example
 DROP TABLE test_complex;

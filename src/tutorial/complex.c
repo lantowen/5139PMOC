@@ -91,7 +91,9 @@ complex_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
 	Complex    *result;
-
+	
+	ereport(LOG, (errmsg("recv called")));
+	ereport(LOG, (errmsg("recv called +1")));
 	result = (Complex *) palloc(sizeof(Complex));
 	result->x = pq_getmsgfloat8(buf);
 	result->y = pq_getmsgfloat8(buf);

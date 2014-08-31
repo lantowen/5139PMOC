@@ -46,42 +46,66 @@ CREATE FUNCTION email_out(email)
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
+-- the binary input function 'complex_recv' takes a StringInfo buffer
+-- and turns its contents into the internal representation.
+
+CREATE FUNCTION email_recv(internal)
+   RETURNS email
+   AS '_OBJWD_/email'
+   LANGUAGE C IMMUTABLE STRICT;
+
+-- the binary output function 'complex_send' takes the internal representation
+-- and converts it into a (hopefully) platform-independent bytea string.
+
+CREATE FUNCTION email_send(email)
+   RETURNS bytea
+   AS '_OBJWD_/email'
+   LANGUAGE C IMMUTABLE STRICT;
 -- now, we can create the type. The internallength specifies the size of the
 -- memory block required to hold the type (we need two 8-byte doubles).
 CREATE TYPE email (
    internallength = 256,
    input = email_in,
    output = email_out,
+   send = email_send,
+   receive = email_recv,
    alignment = double
 );
 CREATE TABLE test_email (
-	a	email
---	b	email,
---	c	email,
---	d	email,
---	e	email,
---	f	email,
---	g	email,
---	h	email,
---	i	email,
---	j	email
+	a	email,
+	b	email,
+	c	email,
+	d	email,
+	e	email,
+	f	email,
+	g	email,
+	h	email,
+	i	email,
+	j	email
 );
---INSERT INTO test_email values('jas@cse.unsw.edu.au','john-shepherd@hotmail.com',
---'john.a.shepherd@gmail.com',
---'J.Shepherd@unsw.edu.au',
---'j.a.shepherd@acm.org',
---'j-a-shepherd@bargain-hunter.com',
---'jas@a-very-silly-domain.org',
---'john1988@my-favourite.org',
---'x-1@gmail.com',
---'a@b.com');
-INSERT INTO test_email values('"jas"@cse.unsw.edu.au');
-INSERT INTO test_email values('j..shepherd@funny.email.org');
-INSERT INTO test_email values('123jas@marketing.abc.com');
-INSERT INTO test_email values('john@123buynow.com.au');
-INSERT INTO test_email values('jas@cse');
-INSERT INTO test_email values('john@cse.unsw@edu.au');
-INSERT INTO test_email values('x--@gmail.com');
+INSERT INTO test_email values('jas@cse.unsw.edu.au','john-shepherd@hotmail.com',
+'john.a.shepherd@gmail.com',
+'J.Shepherd@unsw.edu.au',
+'j.a.shepherd@acm.org',
+'j-a-shepherd@bargain-hunter.com',
+'jas@a-very-silly-domain.org',
+'john1988@my-favourite.org',
+'x-1@gmail.com',
+'a@b.com');
+UPDATE test_email
+SET a='JAS@cse.unsw.EDU.AU';
+--INSERT INTO test_email values('"jas"@cse.unsw.edu.au');
+--INSERT INTO test_email values('j..shepherd@funny.email.org');
+--INSERT INTO test_email values('123jas@marketing.abc.com');
+--INSERT INTO test_email values('john@123buynow.com.au');
+--INSERT INTO test_email values('jas@cse');
+--INSERT INTO test_email values('john@cse.unsw@edu.au');
+--INSERT INTO test_email values('x--@gmail.com');
+SELECT * from test_email;
+COPY BINARY test_email to '/tmp/testfile';
+DELETE FROM test_email;
+SELECT * from test_email;
+COPY BINARY test_email FROM '/tmp/testfile';
 SELECT * from test_email;
 DROP TYPE email CASCADE;
 DROP TABLE test_email;

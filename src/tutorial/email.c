@@ -11,6 +11,8 @@
 
 #include "fmgr.h"
 #include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
 
 #define DOMAIN_LENGTH 128
@@ -32,14 +34,14 @@ typedef struct Email
  */
 Datum		email_in(PG_FUNCTION_ARGS);
 Datum		email_out(PG_FUNCTION_ARGS);
-//Datum		email_recv(PG_FUNCTION_ARGS);
-//Datum		email_send(PG_FUNCTION_ARGS);
+Datum		email_recv(PG_FUNCTION_ARGS);
+Datum		email_send(PG_FUNCTION_ARGS);
 static int Word_Validate(char* word) {
 	int i;
 	i = strlen(word);
-	if((word[0] >= 65 &&  word[0] <= 90)||(word[0] >= 97 &&  word[0] <= 122))
-			if((word[i-1] >= 48 &&  word[i-1] <= 57)||(word[i-1] >= 65 &&  word[i-1] <= 90)
-				||(word[i-1] >= 97 &&  word[i-1] <= 122))
+	if((word[0] >= 'A' &&  word[0] <= 'Z')||(word[0] >= 'a' &&  word[0] <= 'z'))
+			if((word[i-1] >= '0' &&  word[i-1] <= '9')||(word[i-1] >= 'A' &&  word[i-1] <= 'Z')
+				||(word[i-1] >= 'a' &&  word[i-1] <= 'z'))
 				for(int a = 1; a < i-1; a++) {
 				if((word[a] >= 48 &&  word[a] <= 57)||(word[a] >= 65 &&  word[a] <= 90)
 				||(word[a] >= 97 &&  word[a] <= 122)||word[a] == 45)
@@ -157,6 +159,19 @@ email_in(PG_FUNCTION_ARGS)
 	//result->x[1] = '\0';
 	result->y = 100;
 	*/
+	int i = 0;
+	char c;
+	while(x[i]) {
+		c = x[i];
+		x[i] = tolower(c);
+		i++;
+	}
+	i = 0;
+	while(y[i]) {
+		c = y[i];
+		y[i] = tolower(c);
+		i++;
+	}
 	strncpy(result->x ,x, 127);
 	strncpy(result->y ,y, 127);
 	pfree(x);
@@ -173,11 +188,9 @@ email_out(PG_FUNCTION_ARGS)
 	char	   *result;
 
 	result = (char *) palloc(300);
-	snprintf(result, 300, "(%s,%s)", email->x, email->y);
+	snprintf(result, 300, "%s@%s", email->x, email->y);
 	PG_RETURN_CSTRING(result);
 }
-
-/*
 PG_FUNCTION_INFO_V1(email_recv);
 
 Datum
@@ -185,10 +198,20 @@ email_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
 	Email    *result;
-
+	char* temp_str1 =  NULL,
+		*temp_str2 = NULL;
+	//ereport(NOTICE, (errmsg("email recv called")));
 	result = (Email *) palloc(sizeof(Email));
-	result->x = pq_getmsgfloat8(buf);
-	result->y = pq_getmsgfloat8(buf);
+	temp_str1 = (char *)pq_getmsgstring(buf);
+
+	temp_str2 = (char *)pq_getmsgstring(buf);
+	strncpy(result->x , temp_str1,127);
+
+	strncpy(result->y , temp_str2,127);
+
+	
+	//pfree(temp_str1);
+	//pfree(temp_str2);
 	PG_RETURN_POINTER(result);
 }
 
@@ -199,10 +222,12 @@ email_send(PG_FUNCTION_ARGS)
 {
 	Email    *email = (Email *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
+	//ereport(NOTICE, (errmsg("email send called")));
 
 	pq_begintypsend(&buf);
-	pq_sendfloat8(&buf, email->x);
-	pq_sendfloat8(&buf, email->y);
+	pq_sendstring(&buf, email->x);
+	//pq_sendtext(&buf, "@",1);
+	pq_sendstring(&buf, email->y);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
 }
-*/
+
