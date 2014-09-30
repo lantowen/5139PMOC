@@ -125,3 +125,6 @@ int			VacuumCostBalance = 0;		/* working state for vacuum */
 bool		VacuumCostActive = false;
 
 int			GinFuzzySearchLimit = 0;
+
+// [ASST2] Sample rate
+double SampleRate = 100;

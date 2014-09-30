@@ -2591,6 +2591,16 @@ static struct config_real ConfigureNamesReal[] =
 		NULL, NULL, NULL
 	},
 
+	{
+		{"sample_rate", PGC_USERSET, QUERY_TUNING_OTHER,
+			gettext_noop("Sets the global sample rate of sequential scan queries."),
+			NULL
+		},
+		&SampleRate,
+		100, 0, 100,
+		NULL, NULL, NULL
+	},
+
 	/* End-of-list marker */
 	{
 		{NULL, 0, 0, NULL, NULL}, NULL, 0.0, 0.0, 0.0, NULL, NULL, NULL

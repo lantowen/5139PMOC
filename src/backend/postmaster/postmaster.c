@@ -2600,6 +2600,10 @@ reaper(SIGNAL_ARGS)
 			/* at this point we are really open for business */
 			ereport(LOG,
 				 (errmsg("database system is ready to accept connections")));
+            ereport(LOG,
+                    (errmsg("in postmaster: unix_socket_directories = %s\n", Unix_socket_directories)));
+            ereport(LOG,
+                    (errmsg("in postmaster: sample rate = %f\n", SampleRate)));
 
 			continue;
 		}
