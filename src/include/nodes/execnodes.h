@@ -1194,6 +1194,10 @@ typedef struct ScanState
 	Relation	ss_currentRelation;
 	HeapScanDesc ss_currentScanDesc;
 	TupleTableSlot *ss_ScanTupleSlot;
+    double sample_rate;
+    char sample_type;
+    long seen;
+    long used;
 } ScanState;
 
 /*

@@ -28,6 +28,7 @@
 #include "executor/execdebug.h"
 #include "executor/nodeSeqscan.h"
 #include "utils/rel.h"
+#include "postmaster/postmaster.h"
 
 static void InitScanRelation(SeqScanState *node, EState *estate, int eflags);
 static TupleTableSlot *SeqNext(SeqScanState *node);
@@ -59,11 +60,31 @@ SeqNext(SeqScanState *node)
 	estate = node->ps.state;
 	direction = estate->es_direction;
 	slot = node->ss_ScanTupleSlot;
+    ereport(LOG,
+            (errmsg("SeqNext")));
 
 	/*
 	 * get the next tuple from the table
 	 */
-	tuple = heap_getnext(scandesc, direction);
+    /*double current_ratio = 0;*/
+    /*if (node->seen != 0) {*/
+        /*current_ratio = node->used / (double) node->seen;*/
+        /*ereport(LOG,*/
+                /*(errmsg("ratio = %f", current_ratio)));*/
+        /*while (current_ratio > node->sample_rate) {*/
+            /*tuple = heap_getnext(scandesc, direction);*/
+            /*++node->seen;*/
+            /*current_ratio = node->used / (double) node->seen;*/
+            /*ereport(LOG,*/
+                    /*(errmsg("ratio = %f", current_ratio)));*/
+        /*}*/
+        /*++node->used;*/
+    /*} else {*/
+        /*tuple = heap_getnext(scandesc, direction);*/
+        /*++node->used;*/
+        /*++node->seen;*/
+    /*}*/
+    tuple = heap_getnext(scandesc, direction);
 
 	/*
 	 * save the tuple and the buffer returned to us by the access methods in
@@ -171,6 +192,12 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 	scanstate = makeNode(SeqScanState);
 	scanstate->ps.plan = (Plan *) node;
 	scanstate->ps.state = estate;
+    scanstate->sample_rate = SampleRate / 100;
+    scanstate->sample_type = SampleType[0];
+    scanstate->seen = 0;
+    scanstate->used = 0;
+    ereport(LOG,
+            (errmsg("rate = %f, type = %c", scanstate->sample_rate, scanstate->sample_type)));
 
 	/*
 	 * Miscellaneous initialization
