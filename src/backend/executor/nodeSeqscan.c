@@ -66,25 +66,29 @@ SeqNext(SeqScanState *node)
 	/*
 	 * get the next tuple from the table
 	 */
-    /*double current_ratio = 0;*/
-    /*if (node->seen != 0) {*/
-        /*current_ratio = node->used / (double) node->seen;*/
-        /*ereport(LOG,*/
-                /*(errmsg("ratio = %f", current_ratio)));*/
-        /*while (current_ratio > node->sample_rate) {*/
-            /*tuple = heap_getnext(scandesc, direction);*/
-            /*++node->seen;*/
-            /*current_ratio = node->used / (double) node->seen;*/
-            /*ereport(LOG,*/
-                    /*(errmsg("ratio = %f", current_ratio)));*/
-        /*}*/
-        /*++node->used;*/
-    /*} else {*/
-        /*tuple = heap_getnext(scandesc, direction);*/
-        /*++node->used;*/
-        /*++node->seen;*/
-    /*}*/
-    tuple = heap_getnext(scandesc, direction);
+	if(node->sample_type == 't') {
+		double current_ratio = 0;
+		if (node->seen != 0) {
+       // current_ratio = node->used / (double) node->seen;
+       // ereport(LOG,
+                //(errmsg("ratio = %f", current_ratio)));
+       	  do {
+        		if(!(scandesc->rs_inited))
+        			break;
+           	 	tuple = heap_getnext(scandesc, direction);
+            	++node->seen;
+            	current_ratio = node->used / (double) node->seen;
+            	ereport(LOG,
+                    	(errmsg("ratio = %f", current_ratio)));
+        		}while (current_ratio >= node->sample_rate);
+       			 ++node->used;
+		} else {
+       	 	tuple = heap_getnext(scandesc, direction);
+        	++node->used;
+        	++node->seen;
+		}
+	}
+    //tuple = heap_getnext(scandesc, direction);
 
 	/*
 	 * save the tuple and the buffer returned to us by the access methods in
