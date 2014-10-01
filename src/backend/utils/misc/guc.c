@@ -3151,7 +3151,16 @@ static struct config_string ConfigureNamesString[] =
 		"",
 		check_application_name, assign_application_name, NULL
 	},
-
+	//Sample type
+	{
+		{"sample_type", PGC_POSTMASTER, CONN_AUTH_SETTINGS,
+			gettext_noop("Sets the global sample type of sequential scan queries."),
+			NULL
+		},
+		&SampleType,
+		"",
+		NULL, NULL, NULL
+	},
 	/* End-of-list marker */
 	{
 		{NULL, 0, 0, NULL, NULL}, NULL, NULL, NULL, NULL, NULL

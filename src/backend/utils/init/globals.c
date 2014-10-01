@@ -128,3 +128,4 @@ int			GinFuzzySearchLimit = 0;
 
 // [ASST2] Sample rate
 double SampleRate = 100;
+char *SampleType = NULL;

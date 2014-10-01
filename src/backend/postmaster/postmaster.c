@@ -2604,6 +2604,8 @@ reaper(SIGNAL_ARGS)
                     (errmsg("in postmaster: unix_socket_directories = %s\n", Unix_socket_directories)));
             ereport(LOG,
                     (errmsg("in postmaster: sample rate = %f\n", SampleRate)));
+                    ereport(LOG,
+                    (errmsg("in postmaster: sample type = %s\n", SampleType)));
 
 			continue;
 		}
