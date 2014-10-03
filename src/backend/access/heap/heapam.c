@@ -708,6 +708,22 @@ heapgettup(HeapScanDesc scan,
  * heapgettup is 1-based.
  * ----------------
  */
+int next_tuple(HeapScanDesc scan, int lineindex, ScanDirection dir) {
+	double current_ratio = 0;
+	bool forward = ScanDirectionIsForward(dir);
+	bool backward = ScanDirectionIsBackward(dir);
+		do {
+			if(forward)
+				lineindex++;
+			else if(backward)
+				lineindex--;
+			++scan->seen;
+			current_ratio = scan->used / (double) scan->seen;
+		}while (current_ratio >= scan->sample_rate);
+		scan->used++;
+=
+		return lineindex;
+}
 static void
 heapgettup_pagemode(HeapScanDesc scan,
 					ScanDirection dir,
@@ -741,6 +757,8 @@ heapgettup_pagemode(HeapScanDesc scan,
 				tuple->t_data = NULL;
 				return;
 			}
+			scan->used = 1;
+			scan->seen = 1;
 			page = scan->rs_startblock; /* first page */
 			heapgetpage(scan, page);
 			lineindex = 0;
@@ -750,7 +768,10 @@ heapgettup_pagemode(HeapScanDesc scan,
 		{
 			/* continue from previously returned page/tuple */
 			page = scan->rs_cblock;		/* current page */
-			lineindex = scan->rs_cindex + 1;
+			if(scan->sample_type == 't')
+				lineindex = next_tuple(scan, lineindex, dir);
+			else
+				lineindex = scan->rs_cindex + 1;
 		}
 
 		dp = (Page) BufferGetPage(scan->rs_cbuf);
@@ -786,6 +807,7 @@ heapgettup_pagemode(HeapScanDesc scan,
 			else
 				page = scan->rs_nblocks - 1;
 			heapgetpage(scan, page);
+
 		}
 		else
 		{
@@ -798,12 +820,17 @@ heapgettup_pagemode(HeapScanDesc scan,
 
 		if (!scan->rs_inited)
 		{
+			scan->used = 1;
+			scan->seen = 1;
 			lineindex = lines - 1;
 			scan->rs_inited = true;
 		}
 		else
 		{
-			lineindex = scan->rs_cindex - 1;
+			if(scan->sample_type == 't')
+				lineindex = next_tuple(scan, lineindex, dir);
+			else
+				lineindex = scan->rs_cindex - 1;
 		}
 		/* page and lineindex now reference the previous visible tid */
 
@@ -897,7 +924,14 @@ heapgettup_pagemode(HeapScanDesc scan,
 			finished = (page == scan->rs_startblock);
 			if (page == 0)
 				page = scan->rs_nblocks;
-			page--;
+			if(scan->sample_type == 'p') {
+				call;
+				finished = (page == scan->rs_startblock);
+				if (page == 0)
+					page = scan->rs_nblocks;
+			}
+			else
+				page--;
             // [ASST2]
             if (!finished) {
                 finished = (page == scan->rs_startblock);

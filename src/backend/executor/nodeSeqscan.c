@@ -246,6 +246,11 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
     if (SampleRate != 100) {
         scanstate->ss_currentScanDesc->rs_sampling = true;
     }
+    scanstate->ss_currentScanDesc->sample_rate = scanstate->sample_rate;
+    scanstate->ss_currentScanDesc->sample_type = scanstate->sample_type;
+    scanstate->ss_currentScanDesc->used = 0;
+    scanstate->ss_currentScanDesc->seen = 0;
+
     ereport(LOG,
             (errmsg("startblock? = %d", scanstate->ss_currentScanDesc->rs_startblock)));
     /*ereport(LOG,*/

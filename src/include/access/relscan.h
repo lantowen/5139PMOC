@@ -55,6 +55,10 @@ typedef struct HeapScanDescData
 
     /* [ASST2] */
     bool        rs_sampling;
+    double 		sample_rate;
+    char		sample_type;
+    int			seen;
+    int			used;
 }	HeapScanDescData;
 
 /*
