@@ -198,7 +198,7 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 	scanstate = makeNode(SeqScanState);
 	scanstate->ps.plan = (Plan *) node;
 	scanstate->ps.state = estate;
-    scanstate->sample_rate = SampleRate / 100;
+    scanstate->sample_rate = SampleRate / 100.0;
     scanstate->sample_type = SampleType[0];
     scanstate->seen = 0;
     scanstate->used = 0;

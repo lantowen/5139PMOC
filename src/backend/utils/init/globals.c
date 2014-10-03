@@ -22,6 +22,8 @@
 #include "miscadmin.h"
 #include "storage/backendid.h"
 
+#include "postmaster/postmaster.h"
+
 
 ProtocolVersion FrontendProtocol;
 
@@ -127,5 +129,5 @@ bool		VacuumCostActive = false;
 int			GinFuzzySearchLimit = 0;
 
 // [ASST2] Sample rate
-int SampleRate = 100;
+double SampleRate = 100.0;
 char *SampleType = NULL;

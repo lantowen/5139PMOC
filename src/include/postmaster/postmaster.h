@@ -31,7 +31,7 @@ extern char *bonjour_name;
 extern bool restart_after_crash;
 
 // [ASST2]
-extern int SampleRate;
+extern double SampleRate;
 extern char *SampleType;
 
 #ifdef WIN32

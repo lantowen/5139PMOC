@@ -721,9 +721,35 @@ int next_tuple(HeapScanDesc scan, int lineindex, ScanDirection dir) {
 			current_ratio = scan->used / (double) scan->seen;
 		}while (current_ratio >= scan->sample_rate);
 		scan->used++;
-=
 		return lineindex;
 }
+
+BlockNumber next_page(HeapScanDesc scan, BlockNumber page) {
+    double current_ratio;
+    do {
+        ++page;
+        ++scan->seen;
+        current_ratio = scan->used / (double) scan->seen;
+    } while (current_ratio >= scan->sample_rate);
+
+    ++scan->used;
+    return page;
+}
+
+BlockNumber prev_page(HeapScanDesc scan, BlockNumber page) {
+    double current_ratio;
+    do {
+        if (page <= scan->rs_startblock)
+            break;
+        --page;
+        ++scan->seen;
+        current_ratio = scan->used / (double) scan->seen;
+    } while (current_ratio >= scan->sample_rate);
+
+    ++scan->used;
+    return page;
+}
+
 static void
 heapgettup_pagemode(HeapScanDesc scan,
 					ScanDirection dir,
@@ -769,7 +795,7 @@ heapgettup_pagemode(HeapScanDesc scan,
 			/* continue from previously returned page/tuple */
 			page = scan->rs_cblock;		/* current page */
 			if(scan->sample_type == 't')
-				lineindex = next_tuple(scan, lineindex, dir);
+				lineindex = next_tuple(scan, scan->rs_cindex, dir);
 			else
 				lineindex = scan->rs_cindex + 1;
 		}
@@ -924,26 +950,17 @@ heapgettup_pagemode(HeapScanDesc scan,
 			finished = (page == scan->rs_startblock);
 			if (page == 0)
 				page = scan->rs_nblocks;
-			if(scan->sample_type == 'p') {
-				call;
-				finished = (page == scan->rs_startblock);
-				if (page == 0)
-					page = scan->rs_nblocks;
-			}
-			else
+			/*if (scan->sample_type == 'p')*/
+                /*prev_page(scan, page);*/
+            /*else*/
 				page--;
-            // [ASST2]
-            if (!finished) {
-                finished = (page == scan->rs_startblock);
-                if (page == 0)
-                    page = scan->rs_nblocks;
-                page--;
-            }
 		}
 		else
 		{
-			page++;
-			page++; // [ASST2]
+            if (scan->sample_type == 'p')
+                page = next_page(scan, page);
+            else
+                page++;
 			if (page >= scan->rs_nblocks)
 				page = 0;
 			finished = (page == scan->rs_startblock);
