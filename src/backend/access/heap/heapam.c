@@ -898,10 +898,18 @@ heapgettup_pagemode(HeapScanDesc scan,
 			if (page == 0)
 				page = scan->rs_nblocks;
 			page--;
+            // [ASST2]
+            if (!finished) {
+                finished = (page == scan->rs_startblock);
+                if (page == 0)
+                    page = scan->rs_nblocks;
+                page--;
+            }
 		}
 		else
 		{
 			page++;
+			page++; // [ASST2]
 			if (page >= scan->rs_nblocks)
 				page = 0;
 			finished = (page == scan->rs_startblock);
@@ -1368,6 +1376,8 @@ heap_beginscan_internal(Relation relation, Snapshot snapshot,
 		scan->rs_key = NULL;
 
 	initscan(scan, key, false);
+    // [ASST2]
+    scan->rs_sampling = false;
 
 	return scan;
 }

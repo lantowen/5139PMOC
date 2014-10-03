@@ -66,29 +66,31 @@ SeqNext(SeqScanState *node)
 	/*
 	 * get the next tuple from the table
 	 */
-	if(node->sample_type == 't') {
-		double current_ratio = 0;
-		if (node->seen != 0) {
-       // current_ratio = node->used / (double) node->seen;
-       // ereport(LOG,
-                //(errmsg("ratio = %f", current_ratio)));
-       	  do {
-        		if(!(scandesc->rs_inited))
-        			break;
-           	 	tuple = heap_getnext(scandesc, direction);
-            	++node->seen;
-            	current_ratio = node->used / (double) node->seen;
-            	ereport(LOG,
-                    	(errmsg("ratio = %f", current_ratio)));
-        		}while (current_ratio >= node->sample_rate);
-       			 ++node->used;
-		} else {
-       	 	tuple = heap_getnext(scandesc, direction);
-        	++node->used;
-        	++node->seen;
-		}
-	}
-    //tuple = heap_getnext(scandesc, direction);
+	/*if(node->sample_type == 't') {*/
+		/*double current_ratio = 0;*/
+		/*if (node->seen != 0) {*/
+       /*// current_ratio = node->used / (double) node->seen;*/
+       /*// ereport(LOG,*/
+                /*//(errmsg("ratio = %f", current_ratio)));*/
+             /*do {*/
+                /*if(!(scandesc->rs_inited))*/
+                    /*break;*/
+                    /*tuple = heap_getnext(scandesc, direction);*/
+                /*++node->seen;*/
+                /*current_ratio = node->used / (double) node->seen;*/
+                /*ereport(LOG,*/
+                        /*(errmsg("ratio = %f", current_ratio)));*/
+                /*}while (current_ratio >= node->sample_rate);*/
+                    /*++node->used;*/
+		/*} else {*/
+                /*tuple = heap_getnext(scandesc, direction);*/
+            /*++node->used;*/
+            /*++node->seen;*/
+		/*}*/
+	/*}*/
+    ereport(LOG,
+            (errmsg("page-at-a-time? = %d", scandesc->rs_pageatatime)));
+    tuple = heap_getnext(scandesc, direction);
 
 	/*
 	 * save the tuple and the buffer returned to us by the access methods in
@@ -238,7 +240,20 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 	 */
 	ExecAssignResultTypeFromTL(&scanstate->ps);
 	ExecAssignScanProjectionInfo(scanstate);
+    // [ASST2]
+    ereport(LOG,
+            (errmsg("page-at-a-time? = %d", scanstate->ss_currentScanDesc->rs_pageatatime)));
+    if (SampleRate != 100) {
+        scanstate->ss_currentScanDesc->rs_sampling = true;
+    }
+    ereport(LOG,
+            (errmsg("startblock? = %d", scanstate->ss_currentScanDesc->rs_startblock)));
+    /*ereport(LOG,*/
+            /*(errmsg("nblocks = %d", scanstate->ss_currentScanDesc->rs_nblocks)));*/
 
+    /*scanstate->ss_currentScanDesc->rs_nblocks *= scanstate->sample_rate;*/
+    /*ereport(LOG,*/
+            /*(errmsg("nblocks = %d", scanstate->ss_currentScanDesc->rs_nblocks)));*/
 	return scanstate;
 }
 

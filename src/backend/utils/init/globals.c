@@ -127,5 +127,5 @@ bool		VacuumCostActive = false;
 int			GinFuzzySearchLimit = 0;
 
 // [ASST2] Sample rate
-double SampleRate = 100;
+int SampleRate = 100;
 char *SampleType = NULL;
