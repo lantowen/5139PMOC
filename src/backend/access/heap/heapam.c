@@ -766,6 +766,10 @@ heapgettup_pagemode(HeapScanDesc scan,
 	OffsetNumber lineoff;
 	int			linesleft;
 	ItemId		lpp;
+	
+	//asst2
+	int 		page_end_offset;
+    int			page_start_offset;
 
 	/*
 	 * calculate next starting lineindex, given scan direction
@@ -854,7 +858,7 @@ heapgettup_pagemode(HeapScanDesc scan,
 		else
 		{
 			if(scan->sample_type == 't')
-				lineindex = next_tuple(scan, lineindex, dir);
+				lineindex = next_tuple(scan, scan->rs_cindex, dir);
 			else
 				lineindex = scan->rs_cindex - 1;
 		}
@@ -934,11 +938,22 @@ heapgettup_pagemode(HeapScanDesc scan,
 			/*
 			 * otherwise move to the next item on the page
 			 */
-			--linesleft;
-			if (backward)
-				--lineindex;
-			else
-				++lineindex;
+			//--linesleft;
+			if (backward) {
+				if(scan->sample_type == 't')
+					lineindex = next_tuple(scan, lineindex, dir);
+				else
+					--lineindex;
+				linesleft = lineindex+1;
+			}
+			else {
+				if(scan->sample_type == 't')
+					lineindex = next_tuple(scan, lineindex, dir);
+				else
+					++lineindex;
+				linesleft = lines - lineindex;
+				
+			}
 		}
 
 		/*
@@ -998,12 +1013,18 @@ heapgettup_pagemode(HeapScanDesc scan,
 		heapgetpage(scan, page);
 
 		dp = (Page) BufferGetPage(scan->rs_cbuf);
+		page_end_offset = lineindex - lines;
 		lines = scan->rs_ntuples;
-		linesleft = lines;
-		if (backward)
-			lineindex = lines - 1;
-		else
-			lineindex = 0;
+		page_start_offset = lines + lineindex;
+		if (backward) {
+			lineindex = page_start_offset;
+			linesleft = page_start_offset + 1;
+		}
+		else {
+			lineindex = page_end_offset;
+			linesleft = lines - page_end_offset;
+			ereport(LOG,(errmsg("index = %d, left = %d", lineindex, linesleft)));
+		}
 	}
 }
 

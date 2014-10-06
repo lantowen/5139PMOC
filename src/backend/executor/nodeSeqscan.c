@@ -60,8 +60,6 @@ SeqNext(SeqScanState *node)
 	estate = node->ps.state;
 	direction = estate->es_direction;
 	slot = node->ss_ScanTupleSlot;
-    ereport(LOG,
-            (errmsg("SeqNext")));
 
 	/*
 	 * get the next tuple from the table
@@ -88,8 +86,6 @@ SeqNext(SeqScanState *node)
             /*++node->seen;*/
 		/*}*/
 	/*}*/
-    ereport(LOG,
-            (errmsg("page-at-a-time? = %d", scandesc->rs_pageatatime)));
     tuple = heap_getnext(scandesc, direction);
 
 	/*
