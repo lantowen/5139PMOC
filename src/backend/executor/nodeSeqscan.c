@@ -279,6 +279,10 @@ ExecEndSeqScan(SeqScanState *node)
 	 */
 	relation = node->ss_currentRelation;
 	scanDesc = node->ss_currentScanDesc;
+    ereport(LOG,
+            (errmsg("nblocks = %d", scanDesc->rs_nblocks)));
+    ereport(LOG,
+            (errmsg("used = %d", scanDesc->used)));
 
 	/*
 	 * Free the exprcontext
