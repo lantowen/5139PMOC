@@ -264,7 +264,7 @@ ExecEndSeqScan(SeqScanState *node)
 	relation = node->ss_currentRelation;
 	scanDesc = node->ss_currentScanDesc;
     ereport(LOG,
-            (errmsg("pages = %d, request = %d\n tuples = %d, request = %d", 
+            (errmsg("rs_nblocks = %d, used = %d\n seen = %d, used = %d", 
             scanDesc->rs_nblocks,scanDesc->used, scanDesc->seen, scanDesc->used )));
 
 	/*

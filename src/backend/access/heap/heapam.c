@@ -108,7 +108,10 @@ static void MultiXactIdWait(MultiXactId multi, MultiXactStatus status,
 static bool ConditionalMultiXactIdWait(MultiXactId multi,
 						   MultiXactStatus status, int *remaining,
 						   uint16 infomask);
-
+//asst2
+int next_tuple(HeapScanDesc scan, int lineindex, ScanDirection dir);
+BlockNumber next_page(HeapScanDesc scan, BlockNumber page);
+BlockNumber prev_page(HeapScanDesc scan, BlockNumber page);
 
 /*
  * Each tuple lock mode has a corresponding heavyweight lock, and one or two
