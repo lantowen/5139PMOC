@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 import re
+import sys
+
+if len(sys.argv) != 3:
+    sys.stderr.write("Usage: python parse.py (t|p) rate%\n")
+    exit()
+type_ = sys.argv[1]
+rate = int(sys.argv[2])
 
 class Result(object):
     def __init__(self, db):
@@ -8,6 +15,7 @@ class Result(object):
         self.avg1 = -1
         self.count1 = -1
         self.time1 = -1
+        self.pgreq1 = -1
 
         self.avg2 = -1
         self.count2 = -1
@@ -23,11 +31,12 @@ class Result(object):
                 self.count3, self.time3)
 
     def query1(self):
-        print '{},{},?,?,{},{}'.format(self.db, self.time1, self.count1, self.avg1)
+        print '{},{},{},{},{}'.format(self.db, self.time1, self.pgreq1, self.count1, self.avg1)
 
-print "db#,time,#page requests,#tuple requests,tuple count,avg"
+print "db#,time,#page requests,tuple count,avg"
 for db in range(10):
-    f = open('results/t-100-{}'.format(db), 'r')
+    f = open('results/{}-{}-{}'.format(type_, rate, db), 'r')
+    log = open('results/{}-{}-{}-log'.format(type_, rate, db), 'r')
     r = Result(db);
     for i, line in enumerate(f):
         if i == 4:
@@ -51,6 +60,16 @@ for db in range(10):
         if i == 19:
             m = re.match(r"Time: (.*) ms", line)
             r.time3 = float(m.group(1))
+
+    for i, line in enumerate(log):
+        if i == 0:
+            m = re.match(r".*rs_nblocks = (\d+).*", line)
+            if type_ == 't':
+                r.pgreq1 = int(m.group(1))
+        if i == 1:
+            m = re.match(r".*seen = (\d+).*", line)
+            if type_ == 'p':
+                r.pgreq1 = int(m.group(1))
 
     r.query1()
 
