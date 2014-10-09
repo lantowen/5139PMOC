@@ -1,0 +1,10 @@
+#!/bin/bash
+mkdir -p dbs
+for i in `seq 0 9`
+do
+    ./gendata 10000 $i > dbs/db$i.sql
+    dropdb db$i
+    createdb db$i
+    psql db$i -f schema.sql
+    psql db$i -f dbs/db$i.sql > /dev/null
+done

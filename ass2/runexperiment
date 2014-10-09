@@ -1,0 +1,21 @@
+#!/bin/bash
+CONF=$PGDATA/postgresql.conf
+mkdir -p results
+
+for type in t p; do
+    sed "s/\(sample_type = \).*/\1'$type'/" < $CONF > tmp
+    mv tmp $CONF
+    
+    for rate in `seq 10 10 100`; do
+        sed "s/\(sample_rate = \).*/\1$rate/" < $CONF > tmp
+        mv tmp $CONF
+
+        pgs stop; rm /srvr/mcho421/pgsql/data/log; pgs start;
+
+        for i in `seq 0 9`; do
+            psql db$i -f all.sql > results/$type-$rate-$i
+        done
+
+    done
+done
+
