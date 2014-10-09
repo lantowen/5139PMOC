@@ -965,9 +965,9 @@ heapgettup_pagemode(HeapScanDesc scan,
 			finished = (page == scan->rs_startblock);
 			if (page == 0)
 				page = scan->rs_nblocks;
-			/*if (scan->sample_type == 'p')*/
-                /*prev_page(scan, page);*/
-            /*else*/
+            if (scan->sample_type == 'p')
+                page = prev_page(scan, page);
+            else
 				page--;
 		}
 		else
