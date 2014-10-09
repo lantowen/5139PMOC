@@ -1023,7 +1023,7 @@ heapgettup_pagemode(HeapScanDesc scan,
 		else {
 			lineindex = page_end_offset;
 			linesleft = lines - page_end_offset;
-			ereport(LOG,(errmsg("index = %d, left = %d", lineindex, linesleft)));
+			//ereport(LOG,(errmsg("index = %d, left = %d", lineindex, linesleft)));
 		}
 	}
 }

@@ -198,8 +198,6 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
     scanstate->sample_type = SampleType[0];
     scanstate->seen = 0;
     scanstate->used = 0;
-    ereport(LOG,
-            (errmsg("rate = %f, type = %c", scanstate->sample_rate, scanstate->sample_type)));
 
 	/*
 	 * Miscellaneous initialization
@@ -237,8 +235,6 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 	ExecAssignResultTypeFromTL(&scanstate->ps);
 	ExecAssignScanProjectionInfo(scanstate);
     // [ASST2]
-    ereport(LOG,
-            (errmsg("page-at-a-time? = %d", scanstate->ss_currentScanDesc->rs_pageatatime)));
     if (SampleRate != 100) {
         scanstate->ss_currentScanDesc->rs_sampling = true;
     }
@@ -246,15 +242,7 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
     scanstate->ss_currentScanDesc->sample_type = scanstate->sample_type;
     scanstate->ss_currentScanDesc->used = 0;
     scanstate->ss_currentScanDesc->seen = 0;
-
-    ereport(LOG,
-            (errmsg("startblock? = %d", scanstate->ss_currentScanDesc->rs_startblock)));
-    /*ereport(LOG,*/
-            /*(errmsg("nblocks = %d", scanstate->ss_currentScanDesc->rs_nblocks)));*/
-
-    /*scanstate->ss_currentScanDesc->rs_nblocks *= scanstate->sample_rate;*/
-    /*ereport(LOG,*/
-            /*(errmsg("nblocks = %d", scanstate->ss_currentScanDesc->rs_nblocks)));*/
+    
 	return scanstate;
 }
 
@@ -276,9 +264,8 @@ ExecEndSeqScan(SeqScanState *node)
 	relation = node->ss_currentRelation;
 	scanDesc = node->ss_currentScanDesc;
     ereport(LOG,
-            (errmsg("nblocks = %d", scanDesc->rs_nblocks)));
-    ereport(LOG,
-            (errmsg("used = %d", scanDesc->used)));
+            (errmsg("pages = %d, request = %d\n tuples = %d, request = %d", 
+            scanDesc->rs_nblocks,scanDesc->used, scanDesc->seen, scanDesc->used )));
 
 	/*
 	 * Free the exprcontext
