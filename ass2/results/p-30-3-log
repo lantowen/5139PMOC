@@ -1,0 +1,8 @@
+psql:all.sql:1: INFO:  rs_nblocks = 292, used = 89
+ seen = 294, used = 89
+psql:all.sql:2: INFO:  rs_nblocks = 292, used = 89
+ seen = 294, used = 89
+psql:all.sql:3: INFO:  rs_nblocks = 112, used = 35
+ seen = 114, used = 35
+psql:all.sql:3: INFO:  rs_nblocks = 292, used = 89
+ seen = 294, used = 89

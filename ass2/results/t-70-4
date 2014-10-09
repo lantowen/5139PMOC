@@ -5,16 +5,16 @@ Pager usage is off.
  50120.672754422238 | 17412
 (1 row)
 
-Time: 9.544 ms
+Time: 6.643 ms
         avg         | count 
 --------------------+-------
  48477.577367205543 |   433
 (1 row)
 
-Time: 6.066 ms
+Time: 6.775 ms
  count 
 -------
  12160
 (1 row)
 
-Time: 16.994 ms
+Time: 11.475 ms

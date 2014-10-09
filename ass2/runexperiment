@@ -13,8 +13,9 @@ for type in t p; do
         pgs stop; rm /srvr/mcho421/pgsql/data/log; pgs start;
 
         for i in `seq 0 9`; do
-            psql db$i -f all.sql > results/$type-$rate-$i
+            psql db$i -f all.sql > results/$type-$rate-$i 2> results/$type-$rate-$i-log
         done
+
 
     done
 done
