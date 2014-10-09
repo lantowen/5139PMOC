@@ -2,6 +2,12 @@
 import re
 import sys
 
+if len(sys.argv) != 2:
+    sys.stderr.write("Usage: python parse.py query#\n");
+    exit()
+
+query_num = int(sys.argv[1])
+
 class Result(object):
     def __init__(self, db, rate, type_):
         super(Result, self).__init__()
@@ -20,6 +26,8 @@ class Result(object):
 
         self.count3 = -1
         self.time3 = -1
+        self.pgreqr3 = -1
+        self.pgreqs3 = -1
 
     def __str__(self):
         return '{},{},{}\n{},{},{}\n{},{}'.format(
@@ -28,9 +36,21 @@ class Result(object):
                 self.count3, self.time3)
 
     def query1(self):
-        print '{},{},{},{},{},{},{}'.format(self.type_, self.rate, self.db, self.time1, self.pgreq1, self.count1, self.avg1)
+        typenum = 1
+        if self.type_ == "t":
+            typenum = 0
+        print '{},{},{},{},{},{},{}'.format(typenum, self.rate, self.db, self.time1, self.pgreq1, self.count1, self.avg1)
 
-print "type,rate,db#,time,#page requests,tuple count,avg"
+    def query3(self):
+        typenum = 1
+        if self.type_ == "t":
+            typenum = 0
+        print '{},{},{},{},{},{},{}'.format(typenum, self.rate, self.db, self.time3, self.pgreqr3, self.pgreqs3, self.count3)
+
+if query_num == 1:
+    print "type,rate,db#,time,#page requests,tuple count,avg"
+elif query_num == 3:
+    print "type,rate,db#,time,#page requests R, #page requests S,tuple count"
 for type_ in ('t', 'p'):
     for rate in range(10, 101, 10):
 
@@ -71,7 +91,28 @@ for type_ in ('t', 'p'):
                     if type_ == 'p':
                         r.pgreq1 = int(m.group(1))-1
 
-            r.query1()
+                if i == 4:
+                    m = re.match(r".*rs_nblocks = (\d+).*", line)
+                    if type_ == 't':
+                        r.pgreqr3 = int(m.group(1))
+                if i == 5:
+                    m = re.match(r".*used = (\d+).*", line)
+                    if type_ == 'p':
+                        r.pgreqr3 = int(m.group(1))-1
+
+                if i == 6:
+                    m = re.match(r".*rs_nblocks = (\d+).*", line)
+                    if type_ == 't':
+                        r.pgreqs3 = int(m.group(1))
+                if i == 7:
+                    m = re.match(r".*used = (\d+).*", line)
+                    if type_ == 'p':
+                        r.pgreqs3 = int(m.group(1))-1
+
+            if query_num == 1:
+                r.query1()
+            elif query_num == 3:
+                r.query3()
         print ""
 
 
