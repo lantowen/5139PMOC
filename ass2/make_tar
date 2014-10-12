@@ -1,0 +1,13 @@
+#!/bin/bash
+changed='backend/access/heap/heapam.c
+backend/executor/nodeSeqscan.c
+backend/utils/init/globals.c
+backend/utils/misc/guc.c
+include/access/relscan.h
+include/nodes/execnodes.h
+include/postmaster/postmaster.h'
+ass2=`pwd`
+cd ../src
+tar cfz ass2.tgz $changed
+mv ass2.tgz $ass2/ass2.tgz
+cd $ass2

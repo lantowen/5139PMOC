@@ -23,6 +23,9 @@ win32ver.rc
 *.exe
 lib*dll.def
 lib*.pc
+*~
+*.swp
+buildtags
 
 # Local excludes in root directory
 /GNUmakefile
